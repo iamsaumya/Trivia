@@ -9,11 +9,14 @@ from models import setup_db, Question, Category
 QUESTIONS_PER_PAGE = 10
 
 
+def get_random_question(questions):
+    return questions[random.rad(0, len(questions), 1)]
+
+
 def paginate(request, questions):
     page = request.args.get('page', 1, type=int)
     start = (page - 1) * QUESTIONS_PER_PAGE
     end = start + QUESTIONS_PER_PAGE
-
     paginated_questions = [question.format() for question in questions]
 
     return paginated_questions[start:end]
@@ -122,6 +125,53 @@ def create_app(test_config=None):
   the form will clear and the question will appear at the end of the last page
   of the questions list in the "List" tab.  
   '''
+    @app.route('/questions', methods=['POST'])
+    def post_question():
+        body = request.get_json()
+
+        if (body.get('searchTerm')):
+            search_term = body.get('searchTerm')
+
+            questions = Question.query.filter(
+                Question.question.ilike(f'%{search_term}%')).all()
+
+            if (len(questions) == 0):
+                abort(404)
+
+            paginated = paginate(request, questions)
+
+            return jsonify({
+                'success': True,
+                'questions': paginated,
+                'total_questions': len(Question.query.all())
+            })
+        else:
+            new_question = body.get('question')
+            new_answer = body.get('answer')
+            new_difficulty = body.get('difficulty')
+            new_category = body.get('category')
+
+            if ((new_question is None) or (new_answer is None)
+                    or (new_difficulty is None) or (new_category is None)):
+                abort(422)
+
+            try:
+                question = Question(question=new_question, answer=new_answer,
+                                    difficulty=new_difficulty, category=new_category)
+                question.insert()
+
+                questions = Question.query.all()
+                paginated = paginate(request, questions)
+
+                return jsonify({
+                    'success': True,
+                    'created': question.id,
+                    'question_created': question.question,
+                    # 'questions': questions,
+                    # 'total_questions': len(questions)
+                })
+            except:
+                abort(422)
 
     '''
   @TODO: 
@@ -142,6 +192,21 @@ def create_app(test_config=None):
   categories in the left column will cause only questions of that 
   category to be shown. 
   '''
+    @app.route('/categories/<int:category_id>/questions', methods=['GET'])
+    def categories_questions(category_id):
+        try:
+            questions = Question.query.filter(
+                Question.category == str(category_id)).all()
+
+            return jsonify({
+                'success': True,
+                'questions': [question.format() for question in questions],
+                'total_questions': len(questions),
+                'current_category': category_id
+            })
+        except:
+            abort(404)
+
     '''
   @TODO: 
   Create a POST endpoint to get questions to play the quiz. 
@@ -153,7 +218,38 @@ def create_app(test_config=None):
   one question at a time is displayed, the user is allowed to answer
   and shown whether they were correct or not. 
   '''
+    @app.route('/quizzes', methods=['POST'])
+    def get_random_quiz_question():
+        body = request.get_json()
 
+        previous_questions = body.get('previous_questions')
+        quiz_category = body.get('quiz_category')
+
+        if ((quiz_category is None) or (previous_questions is None)):
+            abort(400)
+
+        if (len(previous_questions) == 5):
+            return jsonify({
+                'success': True
+            })
+
+        if (quiz_category['type'] == 'click'):
+            questions = Question.query.all()
+        else:
+            questions = Question.query.filter_by(
+                category=quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
+
+        if (len(questions) == 0):
+            return jsonify({
+                'success': True
+            })
+
+        question = get_random_question(questions)
+
+        return jsonify({
+            'success': True,
+            'question': question.format()
+        })
     '''
   @TODO: 
   Create error handlers for all expected errors 
