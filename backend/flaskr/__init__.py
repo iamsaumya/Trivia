@@ -10,7 +10,7 @@ QUESTIONS_PER_PAGE = 10
 
 
 def get_random_question(questions):
-    return questions[random.rad(0, len(questions), 1)]
+    return questions[random.randrange(0, len(questions))]
 
 
 def paginate(request, questions):
@@ -166,9 +166,7 @@ def create_app(test_config=None):
                 return jsonify({
                     'success': True,
                     'created': question.id,
-                    'question_created': question.question,
-                    # 'questions': questions,
-                    # 'total_questions': len(questions)
+                    'question_created': question.question
                 })
             except:
                 abort(422)
