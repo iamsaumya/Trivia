@@ -100,7 +100,7 @@ def create_app(test_config=None):
     @app.route('/questions/<int:question_id>', methods=['DELETE'])
     def delete_question(question_id):
         try:
-            question = Question.query.filter_by(id=question_id).all()
+            question = Question.query.get(question_id)
 
             if question is None:
                 abort(404)
@@ -166,7 +166,7 @@ def create_app(test_config=None):
                 return jsonify({
                     'success': True,
                     'created': question.id,
-                    'question_created': question.question
+                    'question': question.format()
                 })
             except:
                 abort(422)
@@ -277,4 +277,11 @@ def create_app(test_config=None):
             "message": "Unprocessable"
         }), 422
 
+    @app.errorhandler(500)
+    def unprocessable(error):
+        return jsonify({
+            "success": False,
+            "error": 500,
+            "message": "Internal Server Error"
+        }), 500
     return app
