@@ -242,6 +242,70 @@ curl http://127.0.0.1:5000/questions -X POST -H "Content-Type: application/json"
 }
 ```
 
+GET "categories/\<int:category_id\>/questions"
+
+- Fetches a dictionary of with category_id as current_category, list of questions, success and total_questions.
+- Request Arguments: None
+- Returns: An object with current_category, list of questions, total number of questions and success validation from server.
+
+```URL
+curl 127.0.0.1:5000/categories/1/questions
+```
+
+```JSON
+{
+  "current_category": 1,
+  "questions": [
+    {
+      "answer": "The Liver",
+      "category": "1",
+      "difficulty": 4,
+      "id": 20,
+      "question": "What is the heaviest organ in the human body?"
+    },
+    {
+      "answer": "Alexander Fleming",
+      "category": "1",
+      "difficulty": 3,
+      "id": 21,
+      "question": "Who discovered penicillin?"
+    },
+    {
+      "answer": "Blood",
+      "category": "1",
+      "difficulty": 4,
+      "id": 22,
+      "question": "Hematology is a branch of medicine involving the study of what?"
+    }
+  ],
+  "success": true,
+  "total_questions": 3
+}
+```
+
+POST "/quizzes"
+
+- Fetches a dictionary of with a random question and success.
+- Request Arguments: A JSON object with a list of ids as previous_questions, and a dictionary as quiz_category with type and id of the requested category.
+- Returns: An object with random question and success validation from server.
+
+```URL
+curl 127.0.0.1:5000/quizzes -X POST -H "Content-Type: application/json" -d '{"previous_questions":[],"quiz_category":{"type":"Science","id":"1"}}'
+```
+
+```JSON
+{
+  "question": {
+    "answer": "The Liver",
+    "category": "1",
+    "difficulty": 4,
+    "id": 20,
+    "question": "What is the heaviest organ in the human body?"
+  },
+  "success": true
+}
+```
+
 ## Testing
 
 To run the tests, run
