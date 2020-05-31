@@ -8,9 +8,14 @@ from models import setup_db, Question, Category
 
 QUESTIONS_PER_PAGE = 10
 
+''' It takes list of questions as an argument and return a random question'''
+
 
 def get_random_question(questions):
     return questions[random.randrange(0, len(questions))]
+
+
+''' This function is used to bifurcate questions to different pages for better UX '''
 
 
 def paginate(request, questions):
@@ -38,8 +43,10 @@ def create_app(test_config=None):
 
     @app.after_request
     def after_request(response):
+        ''' Allowing these headers in requests'''
         response.headers.add('Access-Control-Allow-Headers',
                              'Content-Type,Authorization,true')
+        ''' Allowing these request methods '''
         response.headers.add('Access-Control-Allow-Methods',
                              'GET,PUT,POST,DELETE,OPTIONS')
         return response
@@ -50,9 +57,9 @@ def create_app(test_config=None):
   '''
     @app.route('/categories')
     def get_categories():
-        categories = Category.query.all()
+        categories = Category.query.all()  # Querying the database to get all categories
 
-        if(len(categories) == 0):
+        if(len(categories) == 0):  # checking if the len is 0, then give 404 error
             abort(404)
 
         return jsonify({
@@ -79,6 +86,7 @@ def create_app(test_config=None):
         if (len(questions) == 0):
             abort(404)
 
+        # Paginate the questions in 10 on each page
         paginated = paginate(request, questions)
 
         categories = Category.query.all()
@@ -102,7 +110,7 @@ def create_app(test_config=None):
 
         question = Question.query.get(question_id)
         # try:
-        if question is None:
+        if question is None:  # If NoneType object is return then abort(404)
             abort(404)
 
         try:
@@ -129,6 +137,7 @@ def create_app(test_config=None):
     def post_question():
         body = request.get_json()
 
+        # Check of searchTerm in the body of the request if it is present then the post request is to search for  a questions
         if (body.get('searchTerm')):
             search_term = body.get('searchTerm')
 
@@ -152,7 +161,7 @@ def create_app(test_config=None):
             new_category = body.get('category')
 
             if ((new_question is None) or (new_answer is None)
-                    or (new_difficulty is None) or (new_category is None)):
+                    or (new_difficulty is None) or (new_category is None)):  # If any of these are not present give 422 error
                 abort(422)
 
             try:
@@ -194,7 +203,7 @@ def create_app(test_config=None):
     def categories_questions(category_id):
         try:
             questions = Question.query.filter(
-                Question.category == str(category_id)).all()
+                Question.category == str(category_id)).all()  # Because category_id is stored as a str in the database
         except:
             abort(422)
 
@@ -203,6 +212,7 @@ def create_app(test_config=None):
 
         return jsonify({
             'success': True,
+            # Using pyhthon trick to do operations in one line
             'questions': [question.format() for question in questions],
             'total_questions': len(questions),
             'current_category': category_id
@@ -234,11 +244,12 @@ def create_app(test_config=None):
                 'success': True
             })
 
+        # If the type of the quiz is "click" THEN the quiz is for all
         if (quiz_category['type'] == 'click'):
             questions = Question.query.all()
         else:
             questions = Question.query.filter_by(
-                category=quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()
+                category=quiz_category['id']).filter(Question.id.notin_((previous_questions))).all()  # An excellent method notin_(), which saves 10 lines of code
 
         if (len(questions) == 0):
             return jsonify({
