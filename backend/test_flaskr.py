@@ -47,14 +47,27 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['categories'])
         self.assertEqual(data['success'], True)
 
+    def test_error_get_all_categories(self):
+        res = self.client().post('/categories')
+        data = json.loads(res.data)
+        self.assertEqual(data['error'], 405)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Method not allowed")
+
     def test_get_all_questions(self):
         res = self.client().get('/questions')
         data = json.loads(res.data)
-
         self.assertTrue(data['questions'])
         self.assertTrue(data['total_questions'])
         self.assertTrue(data['categories'])
         self.assertEqual(data['success'], True)
+
+    def test_error_get_all_questions(self):
+        res = self.client().patch('/questions')
+        data = json.loads(res.data)
+        self.assertEqual(data['error'], 405)
+        self.assertEqual(data['success'], False)
+        self.assertEqual(data['message'], "Method not allowed")
 
     def test_delete_question(self):
         question = Question(question=self.question['question'], answer=self.question['answer'],
